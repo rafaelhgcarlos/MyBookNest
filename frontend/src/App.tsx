@@ -1,10 +1,10 @@
-import ComingSoon from "./pages/ComingSoon.tsx";
+import Home from "./pages/Home.tsx";
 
 export default function App() {
 
   return (
     <>
-      <ComingSoon/>
+      <Home/>
     </>
   )
 }
