@@ -44,7 +44,7 @@ export default function Header() {
     function handleLogout() {
         setUser(null);
         setUserMenuOpen(false);
-        navigate("/login");
+        navigate("/");
     }
 
     useEffect(() => {
@@ -112,12 +112,12 @@ export default function Header() {
                                 <Button
                                     style="ghost"
                                     label="Sign in"
-                                    onClick={() => navigate("/login")}
+                                    onClick={() => navigate("/")}
                                 />
                                 <Button
                                     style="primary"
                                     label="Sign up"
-                                    onClick={() => navigate("/register")}
+                                    onClick={() => navigate("/")}
                                 />
                             </div>
                         )}
