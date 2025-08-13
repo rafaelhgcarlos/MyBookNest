@@ -37,9 +37,9 @@ function NavMenuMobile({
             <ul className="text-xl space-y-3 px-2 py-4">
                 <NavLinks
                     links={[
-                        { label: "Home", href: "/", icon: "uil-home" },
-                        { label: "Library", href: "/library", icon: "uil-book" },
-                        { label: "About", href: "/about", icon: "uil-question-circle" },
+                        { label: "Inicio", href: "/", icon: "uil-home" },
+                        { label: "Biblioteca", href: "/biblioteca", icon: "uil-book" },
+                        { label: "Sobre", href: "/sobre", icon: "uil-question-circle" },
                     ]}
                 />
             </ul>
@@ -60,12 +60,12 @@ function NavMenuMobile({
                         <Button
                             style="secondary"
                             label="Sign in"
-                            onClick={() => navigate("/login")}
+                            onClick={() => navigate("/")}
                         />
                         <Button
                             style="primary"
                             label="Sign up"
-                            onClick={() => navigate("/register")}
+                            onClick={() => navigate("/")}
                         />
                     </>
                 )}
