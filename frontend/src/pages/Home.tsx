@@ -6,12 +6,14 @@ import Footer from "../components/Home/Footer";
 
 const Home: FC = () => {
     return (
-        <>
-            <Header/>
-            <Hero/>
-            <Features/>
-            <Footer/>
-        </>
+        <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-1">
+                <Hero />
+                <Features />
+            </main>
+            <Footer />
+        </div>
     );
 };
 
