@@ -74,7 +74,6 @@ export default function Header() {
                         MyBookNest
                     </a>
 
-                    {/* Botão mobile */}
                     <div className="flex items-center md:hidden">
                         <Button
                             style="ghost"
@@ -84,15 +83,14 @@ export default function Header() {
                             icon={isMenuOpen ? IconClose : IconBars}
                             iconPosition="alone"
                             state="enabled"
+                            type="button"
                         />
                     </div>
 
-                    {/* Menu desktop */}
                     <nav className="hidden md:flex">
                         <NavMenu user={user} />
                     </nav>
 
-                    {/* Área usuário desktop */}
                     <div className="hidden md:flex items-center justify-end text-xl">
                         {user ? (
                             <div className={"relative"}>
@@ -124,7 +122,6 @@ export default function Header() {
                     </div>
                 </div>
 
-                {/* Menu mobile */}
                 <NavMenuMobile
                     user={user}
                     toggleUserMenu={toggleUserMenu}

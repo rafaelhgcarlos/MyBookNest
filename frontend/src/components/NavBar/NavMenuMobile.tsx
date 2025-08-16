@@ -60,12 +60,12 @@ function NavMenuMobile({
                         <Button
                             style="secondary"
                             label="Sign in"
-                            onClick={() => navigate("/")}
+                            onClick={() => navigate("/entrar")}
                         />
                         <Button
                             style="primary"
                             label="Sign up"
-                            onClick={() => navigate("/")}
+                            onClick={() => navigate("/registrar")}
                         />
                     </>
                 )}
