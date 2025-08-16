@@ -5,6 +5,7 @@ import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
 
 export default function Register() {
     const [displayName, setDisplayName] = useState("");
+    const [displayLastName, setDisplayLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -14,7 +15,7 @@ export default function Register() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!displayName || !email || !password || !confirmPassword) {
+        if (!displayName || !displayLastName || !email || !password || !confirmPassword) {
             setError("Todos os campos são obrigatórios.");
             return;
         }
@@ -62,7 +63,13 @@ export default function Register() {
                     <input
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
-                        placeholder="Nome de usuário"
+                        placeholder="Nome"
+                        className="w-full bg-gray-800/60 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                        value={displayLastName}
+                        onChange={(e) => setDisplayLastName(e.target.value)}
+                        placeholder="Sobrenome"
                         className="w-full bg-gray-800/60 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <input
