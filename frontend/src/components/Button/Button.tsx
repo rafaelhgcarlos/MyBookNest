@@ -1,27 +1,37 @@
-import type {ButtonProps} from "./Button.types";
-import getButtonStyle from "./Button.styles.ts";
+import React from "react";
+import type { ButtonProps } from "./Button.types";
+import getButtonStyle from "./Button.styles";
 
-function Button({
-                    style = 'primary',
-                    size = 'md',
-                    state = 'enabled',
-                    label = 'label',
-                    icon: Icon,
-                    iconPosition = 'left',
-                    onClick,
-                }: ButtonProps) {
+export default function Button({
+                                   style = "primary",
+                                   size = "md",
+                                   state = "enabled",
+                                   label,
+                                   icon,
+                                   iconPosition = "left",
+                                   onClick,
+                                   type = "button",
+                               }: ButtonProps) {
+    const { buttonStyle, iconSize } = getButtonStyle(size, style, state);
+    const isDisabled = state === "disabled";
 
-    const {buttonStyle, iconSize} = getButtonStyle(size, style, state);
-    const isDisabled = state === 'disabled';
+    const renderIcon = () => {
+        if (!icon) return null;
+        if (React.isValidElement(icon)) return icon;
+        return React.createElement(icon as any, { size: iconSize });
+    };
 
     return (
-        <button onClick={onClick} className={buttonStyle} disabled={isDisabled}>
-            {Icon && iconPosition === 'left' && <Icon size={iconSize}/>}
-            {iconPosition != 'alone' && label}
-            {Icon && iconPosition === 'right' && <Icon size={iconSize}/>}
-            {Icon && iconPosition === 'alone' && <Icon size={iconSize}/>}
+        <button
+            type={type}
+            onClick={onClick}
+            className={buttonStyle}
+            disabled={isDisabled}
+        >
+            {iconPosition === "left" && renderIcon()}
+            {iconPosition !== "alone" && label}
+            {iconPosition === "right" && renderIcon()}
+            {iconPosition === "alone" && renderIcon()}
         </button>
-    )
+    );
 }
-
-export default Button

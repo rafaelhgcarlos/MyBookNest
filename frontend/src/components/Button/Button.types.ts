@@ -1,17 +1,19 @@
+import type { ReactNode, ComponentType } from "react";
 import type {LucideIcon} from "lucide-react";
-import type {ReactNode} from "react";
 
 export type ButtonStyle = 'primary' | 'secondary' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl';
 export type ButtonIconPosition = 'left' | 'right' | 'alone';
 export type ButtonState = 'enabled' | 'disabled';
+export type Type = 'button' | 'submit' | 'reset';
 
 export interface ButtonProps {
     label?: ReactNode;
     style?: ButtonStyle;
-    icon?: LucideIcon;
-    iconPosition?: ButtonIconPosition;
     size?: ButtonSize;
     state?: ButtonState;
-    onClick?: () => void;
+    icon?: ReactNode | ComponentType<any> | LucideIcon;
+    iconPosition?: ButtonIconPosition;
+    onClick?: (e?: React.MouseEvent<HTMLButtonElement>) => void;
+    type?: Type;
 }
