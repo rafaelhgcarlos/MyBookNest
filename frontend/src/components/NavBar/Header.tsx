@@ -110,12 +110,12 @@ export default function Header() {
                                 <Button
                                     style="ghost"
                                     label="Sign in"
-                                    onClick={() => navigate("/")}
+                                    onClick={() => navigate("/entrar")}
                                 />
                                 <Button
                                     style="primary"
                                     label="Sign up"
-                                    onClick={() => navigate("/")}
+                                    onClick={() => navigate("/registrar")}
                                 />
                             </div>
                         )}
