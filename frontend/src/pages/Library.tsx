@@ -61,10 +61,12 @@ export default function BookSearch() {
     );
 
     useEffect(() => {
-        const INITIAL_QUERY = "A";
-        setSearchTerm(INITIAL_QUERY);
-        searchBooks(0, INITIAL_QUERY);
-    }, [searchBooks]);
+        if (!searchTerm) {
+            const INITIAL_QUERY = "A";
+            setSearchTerm(INITIAL_QUERY);
+            searchBooks(0, INITIAL_QUERY);
+        }
+    }, [searchBooks, searchTerm]);
 
     const handleSearch = () => {
         if (!query.trim()) return;
