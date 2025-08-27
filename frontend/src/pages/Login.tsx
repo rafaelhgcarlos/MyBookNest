@@ -3,28 +3,18 @@ import { useState } from "react";
 import Button from "../components/Button/Button";
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
 
-export default function Register() {
+export default function Login() {
     const [displayName, setDisplayName] = useState("");
-    const [displayLastName, setDisplayLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [agreeTerms, setAgreeTerms] = useState(false); // estado do checkbox
+    const [agreeTerms, setAgreeTerms] = useState(false);
     const [error, setError] = useState("");
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!displayName || !displayLastName || !email || !password || !confirmPassword) {
+        if (!displayName || !email || !password) {
             setError("Todos os campos são obrigatórios.");
-            return;
-        }
-        if (password !== confirmPassword) {
-            setError("As senhas não coincidem!");
-            return;
-        }
-        if (password.length < 6) {
-            setError("A senha deve ter no mínimo 6 caracteres.");
             return;
         }
         if (!agreeTerms) {
@@ -33,7 +23,7 @@ export default function Register() {
         }
 
         setError("");
-        // lógica de registro aqui
+        // lógica de login aqui
     };
 
     return (
@@ -45,7 +35,7 @@ export default function Register() {
                     </Link>
                 </div>
 
-                <h2 className="text-2xl font-semibold mb-6 text-center">Crie sua conta</h2>
+                <h2 className="text-2xl font-semibold mb-6 text-center">Entre com sua conta</h2>
 
                 <div className="flex flex-col gap-3 mb-6">
                     <Button label="Entrar com Google" icon={FaGoogle} onClick={() => {}} />
@@ -67,12 +57,6 @@ export default function Register() {
                         className="w-full bg-gray-800/60 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <input
-                        value={displayLastName}
-                        onChange={(e) => setDisplayLastName(e.target.value)}
-                        placeholder="Sobrenome"
-                        className="w-full bg-gray-800/60 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <input
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Email"
@@ -83,13 +67,6 @@ export default function Register() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Senha"
-                        type="password"
-                        className="w-full bg-gray-800/60 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <input
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Confirme sua senha"
                         type="password"
                         className="w-full bg-gray-800/60 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -115,9 +92,9 @@ export default function Register() {
                 </form>
 
                 <p className="text-center text-sm text-gray-400 mt-6">
-                    Já possui uma conta?{" "}
-                    <Link to="/entrar" className="text-blue-400 hover:underline">
-                        Faça login
+                    Não possui uma conta?{" "}
+                    <Link to="/registrar" className="text-blue-400 hover:underline">
+                        Faça registro
                     </Link>
                 </p>
             </div>

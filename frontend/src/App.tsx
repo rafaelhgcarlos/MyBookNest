@@ -3,6 +3,7 @@ import Home from "./pages/Home.tsx";
 import Library from "./pages/Library.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Register from "./pages/Register.tsx";
+import Login from "./pages/Login.tsx";
 
 export default function App() {
 
@@ -12,6 +13,7 @@ export default function App() {
                 <Route path="/" element={<Home/>}/>
                 <Route path="/biblioteca" element={<Library/>}/>
                 <Route path="/registrar" element={<Register/>}/>
+                <Route path="/entrar" element={<Login/>}/>
                 <Route path="*" element={<NotFound/>}/>
             </Routes>
         </Router>

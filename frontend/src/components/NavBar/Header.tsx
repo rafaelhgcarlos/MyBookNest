@@ -109,12 +109,12 @@ export default function Header() {
                             <div className="flex items-center justify-end gap-4 sm:text-sm lg:text-lg">
                                 <Button
                                     style="ghost"
-                                    label="Sign in"
+                                    label="Entrar"
                                     onClick={() => navigate("/entrar")}
                                 />
                                 <Button
                                     style="primary"
-                                    label="Sign up"
+                                    label="Registrar"
                                     onClick={() => navigate("/registrar")}
                                 />
                             </div>
