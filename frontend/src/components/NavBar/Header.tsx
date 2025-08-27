@@ -44,7 +44,6 @@ export default function Header() {
     function handleLogout() {
         setUser(null);
         setUserMenuOpen(false);
-        navigate("/");
     }
 
     useEffect(() => {

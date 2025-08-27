@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import Header from "../components/NavBar/Header";
 import Button from "../components/Button/Button";
+import { useNavigate } from "react-router-dom";
 
 interface Book {
     id: string;
@@ -24,6 +25,8 @@ export default function BookSearch() {
     const [hasMorePages, setHasMorePages] = useState(true);
     const [starRatings, setStarRatings] = useState<{ [id: string]: number }>({});
     const [loading, setLoading] = useState(false);
+
+    const navigate = useNavigate();
 
     const searchBooks = useCallback(
         async (page = 0, customQuery?: string) => {
@@ -137,7 +140,7 @@ export default function BookSearch() {
                             {books.map((book, index) => (
                                 <motion.a
                                     key={book.id}
-                                    href={`/library/books/${book.id}`}
+                                    onClick={() => navigate(`/biblioteca/${book.id}`)}
                                     initial={{ opacity: 0, y: 20, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     transition={{ duration: 0.5, delay: index * 0.07, ease: "easeOut" }}
