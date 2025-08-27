@@ -32,7 +32,7 @@ export default function UserMenu({ user, userMenuOpen, onLogout }: UserMenuProps
                 />
 
                 <div className="mt-10 flex items-center justify-center">
-                    <Button style="secondary" label="Logout" onClick={onLogout} />
+                    <Button style="secondary" label="Sair" onClick={onLogout} />
                 </div>
             </ul>
         </div>
