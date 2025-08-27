@@ -127,7 +127,7 @@ export default function BookDetails() {
         <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-950 to-blue-900 text-white">
             <Header />
 
-            <main className="flex-1 max-w-6xl mx-auto px-6 pt-28 pb-24 relative">
+            <main className="flex-1 w-full max-w-[95%] md:max-w-6xl mx-auto px-6 pt-28 pb-24 relative overflow-x-hidden">
                 <div className="absolute inset-0 -z-10 pointer-events-none">
                     <div className="absolute -top-10 -left-10 h-40 w-40 bg-blue-700/40 rounded-full blur-3xl" />
                     <div className="absolute top-40 -right-10 h-56 w-56 bg-indigo-600/40 rounded-full blur-3xl" />
