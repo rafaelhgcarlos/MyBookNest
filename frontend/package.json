@@ -13,6 +13,7 @@
     "@lottiefiles/dotlottie-react": "^0.14.4",
     "@tailwindcss/vite": "^4.1.11",
     "animate.css": "^4.1.1",
+    "axios": "^1.11.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.542.0",

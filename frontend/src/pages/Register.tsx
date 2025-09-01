@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import Button from "../components/Button/Button";
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
+import axios from "axios";
 
 export default function Register() {
     const [displayName, setDisplayName] = useState("");
@@ -12,7 +13,7 @@ export default function Register() {
     const [agreeTerms, setAgreeTerms] = useState(false); // estado do checkbox
     const [error, setError] = useState("");
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!displayName || !displayLastName || !email || !password || !confirmPassword) {
@@ -33,7 +34,26 @@ export default function Register() {
         }
 
         setError("");
-        // lógica de registro aqui
+
+        try {
+            const response = await axios.post("http://localhost:3000/auth/register", {
+                name: displayName + " " + displayLastName,
+                email,
+                password,
+            });
+
+            alert(response.data.message);
+
+            setDisplayName("");
+            setDisplayLastName("");
+            setEmail("");
+            setPassword("");
+            setConfirmPassword("");
+            setAgreeTerms(false);
+
+        } catch (err: any) {
+            setError(err.response?.data?.error || "Erro ao registrar usuário");
+        }
     };
 
     return (

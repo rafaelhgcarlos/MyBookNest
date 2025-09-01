@@ -1,29 +1,35 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Button from "../components/Button/Button";
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
+import axios from "axios";
 
 export default function Login() {
-    const [displayName, setDisplayName] = useState("");
+    const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [agreeTerms, setAgreeTerms] = useState(false);
     const [error, setError] = useState("");
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!displayName || !email || !password) {
+        if (!email || !password) {
             setError("Todos os campos são obrigatórios.");
             return;
         }
-        if (!agreeTerms) {
-            setError("Você precisa concordar com os Termos & Condições.");
-            return;
-        }
 
-        setError("");
-        // lógica de login aqui
+        try {
+            const response = await axios.post("http://localhost:3000/auth/login", {
+                email,
+                password,
+            });
+
+            localStorage.setItem("token", response.data.token);
+
+            navigate("/");
+        } catch (err: any) {
+            setError(err.response?.data?.error || "Erro no login");
+        }
     };
 
     return (
@@ -51,12 +57,6 @@ export default function Login() {
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <input
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        placeholder="Nome"
-                        className="w-full bg-gray-800/60 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <input
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Email"
@@ -71,24 +71,9 @@ export default function Login() {
                         className="w-full bg-gray-800/60 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     />
 
-                    <label className="flex items-center gap-2 text-sm sm:text-base text-gray-300 mt-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={agreeTerms}
-                            onChange={(e) => setAgreeTerms(e.target.checked)}
-                            className="accent-blue-500 w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0"
-                        />
-                        <span className="flex flex-wrap gap-1">
-                            Concordo com os{" "}
-                            <Link to="/terms" className="text-blue-400 hover:underline">
-                                Termos & Condições
-                            </Link>
-                        </span>
-                    </label>
-
                     {error && <p className="text-red-400 text-sm font-medium text-center">{error}</p>}
 
-                    <Button label="Registrar" type="submit" />
+                    <Button label="Entrar" type="submit" />
                 </form>
 
                 <p className="text-center text-sm text-gray-400 mt-6">
