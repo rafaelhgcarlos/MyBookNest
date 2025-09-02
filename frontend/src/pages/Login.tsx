@@ -2,7 +2,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Button from "../components/Button/Button";
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
-import axios from "axios";
+import { api } from "../services/api";
+
 
 export default function Login() {
     const navigate = useNavigate();
@@ -19,10 +20,7 @@ export default function Login() {
         }
 
         try {
-            const response = await axios.post("http://localhost:3000/auth/login", {
-                email,
-                password,
-            });
+            const response = await api.post("/auth/login", { email, password });
 
             localStorage.setItem("token", response.data.token);
 

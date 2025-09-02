@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import Button from "../components/Button/Button";
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
-import axios from "axios";
+import { api } from "../services/api";
 
 export default function Register() {
     const [displayName, setDisplayName] = useState("");
@@ -36,7 +36,7 @@ export default function Register() {
         setError("");
 
         try {
-            const response = await axios.post("http://localhost:3000/auth/register", {
+            const response = await api.post("/auth/register", {
                 name: displayName + " " + displayLastName,
                 email,
                 password,
