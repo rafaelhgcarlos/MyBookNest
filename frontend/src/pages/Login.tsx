@@ -1,9 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import toast from "react-hot-toast";
 import Button from "../components/Button/Button";
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
-import { api } from "../services/api";
-
+import { loginUser, loginWithGoogle } from "../services/authService";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -11,22 +11,52 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
+    const getFirebaseErrorMessage = (code: string): string => {
+        switch (code) {
+            case "auth/invalid-email": return "O e-mail informado é inválido.";
+            case "auth/user-disabled": return "Este usuário foi desativado.";
+            case "auth/user-not-found": return "Usuário não encontrado.";
+            case "auth/wrong-password": return "Senha incorreta.";
+            case "auth/missing-password": return "Digite uma senha para continuar.";
+            case "auth/network-request-failed": return "Falha de conexão. Verifique sua internet.";
+            case "auth/popup-closed-by-user": return "O login foi cancelado. Tente novamente.";
+            default: return "Ocorreu um erro inesperado. Tente novamente.";
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!email || !password) {
-            setError("Todos os campos são obrigatórios.");
+            const msg = "Preencha todos os campos.";
+            setError(msg);
+            toast.error(msg);
             return;
         }
 
         try {
-            const response = await api.post("/auth/login", { email, password });
-
-            localStorage.setItem("token", response.data.token);
-
+            await loginUser(email, password);
+            toast.success("Login realizado com sucesso!");
+            setError("");
             navigate("/");
         } catch (err: any) {
-            setError(err.response?.data?.error || "Erro no login");
+            const errorCode = err.code || "unknown";
+            const msg = getFirebaseErrorMessage(errorCode);
+            setError(msg);
+            toast.error(msg);
+        }
+    };
+
+    const handleSocialLogin = async () => {
+        try {
+            const user = await loginWithGoogle();
+            toast.success(`Bem-vindo, ${user.displayName || user.email}!`);
+            navigate("/");
+        } catch (err: any) {
+            const errorCode = err.code || "unknown";
+            const msg = getFirebaseErrorMessage(errorCode);
+            setError(msg);
+            toast.error(msg);
         }
     };
 
@@ -39,12 +69,12 @@ export default function Login() {
                     </Link>
                 </div>
 
-                <h2 className="text-2xl font-semibold mb-6 text-center">Entre com sua conta</h2>
+                <h2 className="text-2xl font-semibold mb-6 text-center">Entrar</h2>
 
                 <div className="flex flex-col gap-3 mb-6">
-                    <Button label="Entrar com Google" icon={FaGoogle} onClick={() => {}} />
-                    <Button label="Entrar com Facebook" icon={FaFacebookF} onClick={() => {}} />
-                    <Button label="Entrar com Apple" icon={FaApple} onClick={() => {}} />
+                    <Button label="Entrar com Google" icon={FaGoogle} onClick={handleSocialLogin} />
+                    <Button label="Entrar com Facebook" icon={FaFacebookF} onClick={() => toast.error("Facebook login não implementado")} />
+                    <Button label="Entrar com Apple" icon={FaApple} onClick={() => toast.error("Apple login não implementado")} />
                 </div>
 
                 <div className="flex items-center gap-4 mb-6">
@@ -69,15 +99,15 @@ export default function Login() {
                         className="w-full bg-gray-800/60 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     />
 
-                    {error && <p className="text-red-400 text-sm font-medium text-center">{error}</p>}
-
                     <Button label="Entrar" type="submit" />
+
+                    {error && <p className="text-red-400 text-sm font-medium text-center mt-2">{error}</p>}
                 </form>
 
                 <p className="text-center text-sm text-gray-400 mt-6">
-                    Não possui uma conta?{" "}
+                    Não possui conta?{" "}
                     <Link to="/registrar" className="text-blue-400 hover:underline">
-                        Faça registro
+                        Crie sua conta
                     </Link>
                 </p>
             </div>
