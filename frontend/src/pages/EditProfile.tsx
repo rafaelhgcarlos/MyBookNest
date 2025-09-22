@@ -6,7 +6,7 @@ import { updateProfile } from "firebase/auth";
 import Button from "../components/Button/Button";
 import Header from "../components/NavBar/Header";
 import { motion } from "framer-motion";
-import toast, { Toaster } from "react-hot-toast";
+import toast, {Toaster} from "react-hot-toast";
 
 export default function EditProfile() {
     const navigate = useNavigate();
@@ -93,8 +93,9 @@ export default function EditProfile() {
                     bio,
                     photoBase64,
                 });
+
                 await updateProfile(firebaseUser, {
-                    displayName: displayName + " " + displayLastName,
+                    displayName: `${displayName} ${displayLastName}`,
                 });
             })(),
             {
@@ -113,8 +114,19 @@ export default function EditProfile() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 pt-16">
             <Header />
-            <Toaster position="top-center" />
-
+            <Toaster
+                position="top-center"
+                toastOptions={{
+                    style: {
+                        background: "#1e3a8a",
+                        color: "#fff",
+                        borderRadius: "12px",
+                        padding: "12px 16px",
+                    },
+                    success: { iconTheme: { primary: "#3b82f6", secondary: "#fff" } },
+                    error: { iconTheme: { primary: "#ef4444", secondary: "#fff" } },
+                }}
+            />
             <div className="max-w-3xl mx-auto p-6 md:p-12 flex flex-col gap-8">
 
                 <motion.div

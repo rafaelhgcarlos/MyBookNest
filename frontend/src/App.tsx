@@ -17,18 +17,16 @@ export default function App() {
             <Toaster
                 position="top-center"
                 toastOptions={{
-                    duration: 4000,
                     style: {
-                        background: "#1E40AF",
+                        background: "#1e3a8a",
                         color: "#fff",
                         borderRadius: "12px",
-                        padding: "12px 24px",
-                        fontWeight: "500",
-                        boxShadow: "0 0 10px rgba(0,0,0,0.5)",
+                        padding: "12px 16px",
                     },
+                    success: { iconTheme: { primary: "#3b82f6", secondary: "#fff" } },
+                    error: { iconTheme: { primary: "#ef4444", secondary: "#fff" } },
                 }}
             />
-
             <Router>
                 <Routes>
                     <Route path="/" element={<Home/>}/>
