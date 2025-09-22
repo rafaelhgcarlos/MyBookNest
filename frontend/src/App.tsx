@@ -6,6 +6,7 @@ import Register from "./pages/Register.tsx";
 import Login from "./pages/Login.tsx";
 import BookDetails from "./pages/BookDetails.tsx";
 import Profile from "./pages/Profile.tsx";
+import EditProfile from "./pages/EditProfile.tsx";
 import {AuthProvider} from "./context/AuthContext";
 import {Toaster} from "react-hot-toast";
 
@@ -35,7 +36,8 @@ export default function App() {
                     <Route path="/biblioteca/:id" element={<BookDetails/>}/>
                     <Route path="/registrar" element={<Register/>}/>
                     <Route path="/entrar" element={<Login/>}/>
-                    <Route path="/profile" element={<Profile/>}/>
+                    <Route path="/perfil" element={<Profile/>}/>
+                    <Route path="/editar-perfil" element={<EditProfile/>}/>
                     <Route path="*" element={<NotFound/>}/>
                 </Routes>
             </Router>

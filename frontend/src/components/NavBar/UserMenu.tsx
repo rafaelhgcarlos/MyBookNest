@@ -25,7 +25,7 @@ export default function UserMenu({ user, userMenuOpen, onLogout }: UserMenuProps
             <ul className="text-xl space-y-3 px-2 py-4 sm:text-lg">
                 <NavLinks
                     links={[
-                        { label: "Meu Perfil", href: "/profile", icon: "uil-user" },
+                        { label: "Meu Perfil", href: "/perfil", icon: "uil-user" },
                         { label: "Meu Backlog", href: "/backlog", icon: "uil-clipboard-notes" },
                         { label: "My Requests", href: "/requests", icon: "uil-postcard" },
                     ]}

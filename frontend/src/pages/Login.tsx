@@ -10,6 +10,7 @@ export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [agreeTerms, setAgreeTerms] = useState(false);
 
     const getFirebaseErrorMessage = (code: string): string => {
         switch (code) {
@@ -29,6 +30,13 @@ export default function Login() {
 
         if (!email || !password) {
             const msg = "Preencha todos os campos.";
+            setError(msg);
+            toast.error(msg);
+            return;
+        }
+
+        if (!agreeTerms) {
+            const msg = "Você precisa concordar com os Termos & Condições.";
             setError(msg);
             toast.error(msg);
             return;
@@ -98,6 +106,21 @@ export default function Login() {
                         type="password"
                         className="w-full bg-gray-800/60 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     />
+
+                    <label className="flex items-center gap-2 text-sm sm:text-base text-gray-300 mt-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={agreeTerms}
+                            onChange={(e) => setAgreeTerms(e.target.checked)}
+                            className="accent-blue-500 w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0"
+                        />
+                        <span className="flex flex-wrap gap-1">
+                            Concordo com os{" "}
+                            <Link to="/terms" className="text-blue-400 hover:underline">
+                                Termos & Condições
+                            </Link>
+                        </span>
+                    </label>
 
                     <Button label="Entrar" type="submit" />
 
