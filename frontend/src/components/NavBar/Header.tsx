@@ -8,6 +8,9 @@ import UserMenu from "./UserMenu.tsx";
 import UserMenuToggle from "./UserMenuToggle.tsx";
 
 import { Menu as IconBars, X as IconClose } from "lucide-react";
+import { auth, db } from "../../lib/firebase";
+import { onAuthStateChanged, signOut, type User as FirebaseUser } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 interface User {
     displayName: string;
@@ -16,9 +19,7 @@ interface User {
 export default function Header() {
     const navigate = useNavigate();
 
-    const [user, setUser] = useState<User | null>({
-        displayName: "Rafael Gonzaga",
-    });
+    const [user, setUser] = useState<User | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
@@ -41,18 +42,40 @@ export default function Header() {
         }
     }
 
-    function handleLogout() {
-        setUser(null);
-        setUserMenuOpen(false);
+    async function handleLogout() {
+        try {
+            await signOut(auth);
+            setUser(null);
+            setUserMenuOpen(false);
+        } catch {
+        }
     }
 
     useEffect(() => {
         window.addEventListener("scroll", handleScroll);
         window.addEventListener("resize", handleResize);
 
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+            if (firebaseUser) {
+                const userRef = doc(db, "users", firebaseUser.uid);
+                const docSnap = await getDoc(userRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const displayName = [data.name, data.lastName].filter(Boolean).join(" ");
+                    setUser({ displayName });
+                } else {
+                    setUser({ displayName: firebaseUser.displayName || firebaseUser.email || "Usuário" });
+                }
+            } else {
+                setUser(null);
+            }
+        });
+
         return () => {
             window.removeEventListener("scroll", handleScroll);
             window.removeEventListener("resize", handleResize);
+            unsubscribe();
         };
     }, []);
 
@@ -92,14 +115,14 @@ export default function Header() {
 
                     <div className="hidden md:flex items-center justify-end text-xl">
                         {user ? (
-                            <div className={"relative"}>
+                            <div className="relative">
                                 <UserMenuToggle
                                     toggleUserMenu={toggleUserMenu}
                                     mockedUserName={user.displayName || "Usuário"}
                                     userMenuOpen={userMenuOpen}
                                 />
                                 <UserMenu
-                                    user={user}
+                                    user={{ displayName: user.displayName }}
                                     userMenuOpen={userMenuOpen}
                                     onLogout={handleLogout}
                                 />
