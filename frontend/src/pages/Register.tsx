@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import Button from "../components/Button/Button";
@@ -6,6 +6,7 @@ import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
 import { registerUser, loginWithGoogle } from "../services/authService";
 
 export default function Register() {
+    const navigate = useNavigate();
     const [displayName, setDisplayName] = useState("");
     const [displayLastName, setDisplayLastName] = useState("");
     const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ export default function Register() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [agreeTerms, setAgreeTerms] = useState(false);
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const getFirebaseErrorMessage = (code: string): string => {
         switch (code) {
@@ -35,34 +37,38 @@ export default function Register() {
         if (!displayName || !displayLastName || !email || !password || !confirmPassword) {
             const msg = "Todos os campos são obrigatórios.";
             setError(msg);
-            toast.error(msg);
+            toast.error(msg, { id: "error-toast" });
             return;
         }
 
         if (password !== confirmPassword) {
             const msg = "As senhas não coincidem!";
             setError(msg);
-            toast.error(msg);
+            toast.error(msg, { id: "error-toast" });
             return;
         }
 
         if (password.length < 6) {
             const msg = "A senha deve ter no mínimo 6 caracteres.";
             setError(msg);
-            toast.error(msg);
+            toast.error(msg, { id: "error-toast" });
             return;
         }
 
         if (!agreeTerms) {
             const msg = "Você precisa concordar com os Termos & Condições.";
             setError(msg);
-            toast.error(msg);
+            toast.error(msg, { id: "error-toast" });
             return;
         }
 
+        setLoading(true);
+        const loadingToast = toast.loading("Registrando...", { id: "loading-toast" });
+
         try {
             const user = await registerUser(email, password, displayName, displayLastName);
-            toast.success("Usuário registrado com sucesso!");
+            toast.dismiss(loadingToast);
+            toast.success("Usuário registrado com sucesso!", { id: "success-toast" });
             setError("");
 
             setDisplayName("");
@@ -73,24 +79,38 @@ export default function Register() {
             setAgreeTerms(false);
 
             console.log("Novo usuário:", user);
+
+            navigate("/");
         } catch (err: any) {
+            toast.dismiss(loadingToast);
             const errorCode = err.code || "unknown";
             const msg = getFirebaseErrorMessage(errorCode);
             setError(msg);
-            toast.error(msg);
+            toast.error(msg, { id: "error-toast" });
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleSocialLogin = async () => {
+        setLoading(true);
+        const loadingToast = toast.loading("Conectando com Google...", { id: "loading-toast" });
+
         try {
             const user = await loginWithGoogle();
-            toast.success(`Bem-vindo, ${user.displayName || user.email}!`);
+            toast.dismiss(loadingToast);
+            toast.success(`Bem-vindo, ${user.displayName || user.email}!`, { id: "success-toast" });
             console.log("Usuário logado via Google:", user);
+
+            navigate("/");
         } catch (err: any) {
+            toast.dismiss(loadingToast);
             const errorCode = err.code || "unknown";
             const msg = getFirebaseErrorMessage(errorCode);
             setError(msg);
-            toast.error(msg);
+            toast.error(msg, { id: "error-toast" });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -106,9 +126,9 @@ export default function Register() {
                 <h2 className="text-2xl font-semibold mb-6 text-center">Crie sua conta</h2>
 
                 <div className="flex flex-col gap-3 mb-6">
-                    <Button label="Entrar com Google" icon={FaGoogle} onClick={handleSocialLogin} />
-                    <Button label="Entrar com Facebook" icon={FaFacebookF} onClick={() => toast.error("Facebook login não implementado")} />
-                    <Button label="Entrar com Apple" icon={FaApple} onClick={() => toast.error("Apple login não implementado")} />
+                    <Button label="Entrar com Google" icon={FaGoogle} onClick={handleSocialLogin} state={loading ? "disabled" : "enabled"} />
+                    <Button label="Entrar com Facebook" icon={FaFacebookF} onClick={() => toast.error("Facebook login não implementado", { id: "error-toast" })} state={loading ? "disabled" : "enabled"} />
+                    <Button label="Entrar com Apple" icon={FaApple} onClick={() => toast.error("Apple login não implementado", { id: "error-toast" })} state={loading ? "disabled" : "enabled"} />
                 </div>
 
                 <div className="flex items-center gap-4 mb-6">
@@ -117,7 +137,7 @@ export default function Register() {
                     <hr className="flex-1 border-gray-500" />
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <form onSubmit={handleSubmit} className={`flex flex-col gap-4 ${loading ? "opacity-50 pointer-events-none" : ""}`}>
                     <input
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
@@ -167,8 +187,7 @@ export default function Register() {
                         </span>
                     </label>
 
-                    <Button label="Registrar" type="submit" />
-
+                    <Button label={loading ? "Registrando..." : "Registrar"} type="submit" state={loading ? "disabled" : "enabled"} />
                     {error && <p className="text-red-400 text-sm font-medium text-center mt-2">{error}</p>}
                 </form>
 

@@ -3,14 +3,14 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import Button from "../components/Button/Button";
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
-import { loginUser, loginWithGoogle } from "../services/authService";
+import { loginUser, loginWithGoogle, resetPassword } from "../services/authService";
 
 export default function Login() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const [agreeTerms, setAgreeTerms] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const getFirebaseErrorMessage = (code: string): string => {
         switch (code) {
@@ -27,44 +27,67 @@ export default function Login() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!email || !password) {
             const msg = "Preencha todos os campos.";
             setError(msg);
-            toast.error(msg);
+            toast.error(msg, { id: "error-toast" });
             return;
         }
 
-        if (!agreeTerms) {
-            const msg = "Você precisa concordar com os Termos & Condições.";
-            setError(msg);
-            toast.error(msg);
-            return;
-        }
+        setLoading(true);
+        const loadingToast = toast.loading("Entrando...", { id: "loading-toast" });
 
         try {
             await loginUser(email, password);
-            toast.success("Login realizado com sucesso!");
+            toast.dismiss(loadingToast);
+            toast.success("Login realizado com sucesso!", { id: "success-toast" });
             setError("");
             navigate("/");
         } catch (err: any) {
-            const errorCode = err.code || "unknown";
-            const msg = getFirebaseErrorMessage(errorCode);
+            toast.dismiss(loadingToast);
+
+            const firebaseError = err as { code?: string; message?: string };
+            console.log(firebaseError);
+            const msg = getFirebaseErrorMessage(firebaseError.code || "unknown");
             setError(msg);
-            toast.error(msg);
+            toast.error(msg, { id: "error-toast" });
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleSocialLogin = async () => {
+        setLoading(true);
+        const loadingToast = toast.loading("Conectando com Google...", { id: "loading-toast" });
+
         try {
             const user = await loginWithGoogle();
-            toast.success(`Bem-vindo, ${user.displayName || user.email}!`);
+            toast.dismiss(loadingToast);
+            toast.success(`Bem-vindo, ${user.displayName || user.email}!`, { id: "success-toast" });
             navigate("/");
         } catch (err: any) {
-            const errorCode = err.code || "unknown";
-            const msg = getFirebaseErrorMessage(errorCode);
+            toast.dismiss(loadingToast);
+            const msg = getFirebaseErrorMessage(err.code || "unknown");
             setError(msg);
-            toast.error(msg);
+            toast.error(msg, { id: "error-toast" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResetPassword = async () => {
+        if (!email) {
+            toast.error("Digite seu email para resetar a senha.", { id: "error-toast" });
+            return;
+        }
+
+        try {
+            await resetPassword(email);
+            toast.success("Email de redefinição de senha enviado!", { id: "success-toast" });
+        } catch (err: any) {
+            const firebaseError = err as { code?: string; message?: string };
+            const msg = getFirebaseErrorMessage(firebaseError.code || "unknown");
+            toast.error(msg, { id: "error-toast" });
         }
     };
 
@@ -80,9 +103,24 @@ export default function Login() {
                 <h2 className="text-2xl font-semibold mb-6 text-center">Entrar</h2>
 
                 <div className="flex flex-col gap-3 mb-6">
-                    <Button label="Entrar com Google" icon={FaGoogle} onClick={handleSocialLogin} />
-                    <Button label="Entrar com Facebook" icon={FaFacebookF} onClick={() => toast.error("Facebook login não implementado")} />
-                    <Button label="Entrar com Apple" icon={FaApple} onClick={() => toast.error("Apple login não implementado")} />
+                    <Button
+                        label="Entrar com Google"
+                        icon={FaGoogle}
+                        onClick={handleSocialLogin}
+                        state={loading ? "disabled" : "enabled"}
+                    />
+                    <Button
+                        label="Entrar com Facebook"
+                        icon={FaFacebookF}
+                        onClick={() => toast.error("Facebook login não implementado", { id: "error-toast" })}
+                        state={loading ? "disabled" : "enabled"}
+                    />
+                    <Button
+                        label="Entrar com Apple"
+                        icon={FaApple}
+                        onClick={() => toast.error("Apple login não implementado", { id: "error-toast" })}
+                        state={loading ? "disabled" : "enabled"}
+                    />
                 </div>
 
                 <div className="flex items-center gap-4 mb-6">
@@ -91,7 +129,7 @@ export default function Login() {
                     <hr className="flex-1 border-gray-500" />
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <form onSubmit={handleSubmit} className={`flex flex-col gap-4 ${loading ? "opacity-50 pointer-events-none" : ""}`}>
                     <input
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -107,25 +145,21 @@ export default function Login() {
                         className="w-full bg-gray-800/60 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     />
 
-                    <label className="flex items-center gap-2 text-sm sm:text-base text-gray-300 mt-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={agreeTerms}
-                            onChange={(e) => setAgreeTerms(e.target.checked)}
-                            className="accent-blue-500 w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0"
-                        />
-                        <span className="flex flex-wrap gap-1">
-                            Concordo com os{" "}
-                            <Link to="/terms" className="text-blue-400 hover:underline">
-                                Termos & Condições
-                            </Link>
-                        </span>
-                    </label>
-
-                    <Button label="Entrar" type="submit" />
+                    <Button
+                        label={loading ? "Entrando..." : "Entrar"}
+                        type="submit"
+                        state={loading ? "disabled" : "enabled"}
+                    />
 
                     {error && <p className="text-red-400 text-sm font-medium text-center mt-2">{error}</p>}
                 </form>
+
+                <p className="text-center text-sm text-gray-400 mt-2">
+                    Esqueceu a senha?{" "}
+                    <button onClick={handleResetPassword} className="text-blue-400 hover:underline">
+                        Redefinir senha
+                    </button>
+                </p>
 
                 <p className="text-center text-sm text-gray-400 mt-6">
                     Não possui conta?{" "}

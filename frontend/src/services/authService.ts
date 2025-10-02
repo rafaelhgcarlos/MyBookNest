@@ -6,16 +6,33 @@ import {
     signInWithPopup,
     GoogleAuthProvider,
     type User as FirebaseUser,
-    updateProfile
+    updateProfile,
+    sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export const loginUser = async (email: string, password: string) => {
-    return await signInWithEmailAndPassword(auth, email, password);
+    if (!email || !password) throw { code: "auth/missing-credentials" };
+
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        return userCredential.user;
+    } catch (err: any) {
+        let code = err.code || "unknown";
+
+        if (err.message?.includes("user-not-found")) code = "auth/user-not-found";
+        if (err.message?.includes("wrong-password")) code = "auth/wrong-password";
+
+        throw { code };
+    }
 };
 
 export const logoutUser = async () => {
     return await signOut(auth);
+};
+
+export const resetPassword = async (email: string) => {
+    return await sendPasswordResetEmail(auth, email);
 };
 
 export const registerUser = async (email: string, password: string, name: string, lastName: string) => {
@@ -24,18 +41,22 @@ export const registerUser = async (email: string, password: string, name: string
         const user = userCredential.user;
         await updateProfile(user, { displayName: `${name} ${lastName}` });
 
+        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            name + " " + lastName
+        )}&background=1F2937&color=FFFFFF&rounded=true`;
 
         await setDoc(doc(db, "users", user.uid), {
             uid: user.uid,
             name,
             lastName,
             email: user.email,
+            photoURL: avatarUrl,
             createdAt: new Date(),
         });
 
         return user;
     } catch (error: any) {
-        throw new Error(error.message);
+        throw error;
     }
 };
 
