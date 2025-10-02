@@ -6,6 +6,7 @@ import { type User as FirebaseUser } from "firebase/auth";
 import Button from "../components/Button/Button";
 import Header from "../components/NavBar/Header";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 
 interface Book {
     id: string;
@@ -100,8 +101,12 @@ export default function MyProfile() {
             await updateDoc(userRef, { bio: bioText });
             setUser({ ...user, bio: bioText });
             setEditingBio(false);
+            toast.dismiss()
+            toast.success("Biografia atualizada com sucesso!");
         } catch (err) {
             console.error("Erro ao atualizar bio:", err);
+            toast.dismiss()
+            toast.error("Não foi possível atualizar a biografia. Tente novamente.");
         }
     };
 

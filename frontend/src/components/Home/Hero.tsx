@@ -1,7 +1,19 @@
 import type { FC } from "react";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { useNavigate } from "react-router-dom";
+import { auth } from "../../lib/firebase";
 
 const Hero: FC = () => {
+    const navigate = useNavigate();
+
+    const handleStart = () => {
+        if (auth.currentUser) {
+            navigate("/biblioteca");
+        } else {
+            navigate("/entrar");
+        }
+    }
+
     return (
         <section className="w-full bg-gradient-to-r from-blue-950 to-blue-800 text-white pt-32 pb-20">
             <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center gap-10">
@@ -15,6 +27,7 @@ const Hero: FC = () => {
                     <button
                         type="button"
                         className="mt-6 px-6 py-3 bg-white text-blue-900 rounded-lg font-medium hover:bg-blue-100 transition"
+                        onClick={handleStart}
                     >
                         Começar agora
                     </button>
