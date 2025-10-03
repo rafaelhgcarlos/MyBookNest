@@ -21,6 +21,7 @@ export default function Login() {
             case "auth/missing-password": return "Digite uma senha para continuar.";
             case "auth/network-request-failed": return "Falha de conexão. Verifique sua internet.";
             case "auth/popup-closed-by-user": return "O login foi cancelado. Tente novamente.";
+            case "auth/too-many-requests": return "Muitas tentativas. Tente novamente mais tarde.";
             default: return "Ocorreu um erro inesperado. Tente novamente.";
         }
     };
