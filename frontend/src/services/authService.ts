@@ -18,12 +18,7 @@ export const loginUser = async (email: string, password: string) => {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         return userCredential.user;
     } catch (err: any) {
-        let code = err.code || "unknown";
-
-        if (err.message?.includes("user-not-found")) code = "auth/user-not-found";
-        if (err.message?.includes("wrong-password")) code = "auth/wrong-password";
-
-        throw { code };
+        throw { code: err.code || "unknown" };
     }
 };
 
