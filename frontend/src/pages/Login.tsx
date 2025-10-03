@@ -4,6 +4,8 @@ import toast from "react-hot-toast";
 import Button from "../components/Button/Button";
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
 import { loginUser, loginWithGoogle, resetPassword } from "../services/authService";
+import { fetchSignInMethodsForEmail } from "firebase/auth"
+import { auth } from "../lib/firebase";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -16,8 +18,6 @@ export default function Login() {
         switch (code) {
             case "auth/invalid-email": return "O e-mail informado é inválido.";
             case "auth/user-disabled": return "Este usuário foi desativado.";
-            case "auth/user-not-found": return "Usuário não encontrado.";
-            case "auth/wrong-password": return "Senha incorreta.";
             case "auth/missing-password": return "Digite uma senha para continuar.";
             case "auth/network-request-failed": return "Falha de conexão. Verifique sua internet.";
             case "auth/popup-closed-by-user": return "O login foi cancelado. Tente novamente.";
@@ -34,21 +34,29 @@ export default function Login() {
             return;
         }
 
+        const cleanEmail = email.trim().toLowerCase();
+
         setLoading(true);
         const loadingToast = toast.loading("Entrando...", { id: "loading-toast" });
 
         try {
-            await loginUser(email, password);
+            await loginUser(cleanEmail, password);
             toast.dismiss(loadingToast);
             toast.success("Login realizado com sucesso!", { id: "success-toast" });
             setError("");
             navigate("/");
         } catch (err: any) {
             toast.dismiss(loadingToast);
+            if (err.code === "auth/invalid-credential") {
+                const methods = await fetchSignInMethodsForEmail(auth, cleanEmail);
+                if (methods.length === 0) {
+                    setError("Usuário não encontrado.");
+                    toast.error("Usuário não encontrado. Ou senha incorreta.", { id: "error-toast" });
+                }
+                return;
+            }
 
-            const firebaseError = err as { code?: string; message?: string };
-            console.log(firebaseError);
-            const msg = getFirebaseErrorMessage(firebaseError.code || "unknown");
+            const msg = getFirebaseErrorMessage(err.code || "unknown");
             setError(msg);
             toast.error(msg, { id: "error-toast" });
         } finally {
