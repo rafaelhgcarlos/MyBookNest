@@ -8,6 +8,8 @@ import Login from "./pages/Login.tsx";
 import BookDetails from "./pages/BookDetails.tsx";
 import Profile from "./pages/Profile.tsx";
 import EditProfile from "./pages/EditProfile.tsx";
+import About from "./pages/About.tsx";
+import Footer from "./components/Home/Footer";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster, toast } from "react-hot-toast";
 
@@ -19,6 +21,29 @@ function ToastCleanup() {
     }, [location]);
 
     return null;
+}
+
+function Layout() {
+    const location = useLocation();
+    const hideFooterRoutes = ["/registrar", "/entrar"];
+
+    return (
+        <>
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/biblioteca" element={<Library />} />
+                <Route path="/biblioteca/:id" element={<BookDetails />} />
+                <Route path="/registrar" element={<Register />} />
+                <Route path="/entrar" element={<Login />} />
+                <Route path="/perfil" element={<Profile />} />
+                <Route path="/editar-perfil" element={<EditProfile />} />
+                <Route path="/sobre" element={<About />} />
+                <Route path="*" element={<NotFound />} />
+            </Routes>
+
+            {!hideFooterRoutes.includes(location.pathname) && <Footer />}
+        </>
+    );
 }
 
 export default function App() {
@@ -39,16 +64,7 @@ export default function App() {
                         error: { iconTheme: { primary: "#ef4444", secondary: "#fff" } },
                     }}
                 />
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/biblioteca" element={<Library />} />
-                    <Route path="/biblioteca/:id" element={<BookDetails />} />
-                    <Route path="/registrar" element={<Register />} />
-                    <Route path="/entrar" element={<Login />} />
-                    <Route path="/perfil" element={<Profile />} />
-                    <Route path="/editar-perfil" element={<EditProfile />} />
-                    <Route path="*" element={<NotFound />} />
-                </Routes>
+                <Layout />
             </Router>
         </AuthProvider>
     );
