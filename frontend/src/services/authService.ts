@@ -5,6 +5,9 @@ import {
     createUserWithEmailAndPassword,
     signInWithPopup,
     GoogleAuthProvider,
+    EmailAuthProvider,
+    fetchSignInMethodsForEmail,
+    linkWithCredential,
     type User as FirebaseUser,
     updateProfile,
     sendPasswordResetEmail,
@@ -55,10 +58,22 @@ export const registerUser = async (email: string, password: string, name: string
     }
 };
 
-export const loginWithGoogle = async () => {
+export const loginWithGoogle = async (password?: string) => {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     const user: FirebaseUser = result.user;
+
+    const methods = await fetchSignInMethodsForEmail(auth, user.email!);
+
+    if (methods.includes("password") && password) {
+        const credential = EmailAuthProvider.credential(user.email!, password);
+        try {
+            await linkWithCredential(user, credential);
+            console.log("Conta Google vinculada ao login com senha!");
+        } catch (err) {
+            console.error("Erro ao vincular conta Google:", err);
+        }
+    }
 
     const userRef = doc(db, "users", user.uid);
     const docSnap = await getDoc(userRef);
