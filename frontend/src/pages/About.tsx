@@ -2,9 +2,12 @@ import Header from "../components/NavBar/Header";
 import { motion } from "framer-motion";
 import { Book, Sparkles, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function About() {
     const [loading, setLoading] = useState(true);
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         const timer = setTimeout(() => setLoading(false), 1500);
@@ -152,7 +155,7 @@ export default function About() {
                         <p className="mb-6 text-lg text-slate-800 leading-relaxed">
                             Cadastre-se agora e descubra um novo jeito de organizar e explorar livros.
                         </p>
-                        <button className="bg-gradient-to-r from-blue-400 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition">
+                        <button onClick={() => navigate("/registrar") } className="bg-gradient-to-r from-blue-400 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition">
                             Registrar
                         </button>
                     </>

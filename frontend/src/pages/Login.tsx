@@ -3,7 +3,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import Button from "../components/Button/Button";
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
-import { loginUser, loginWithGoogle, resetPassword } from "../services/authService";
+import { loginUser, loginWithGoogle } from "../services/authService";
 import { fetchSignInMethodsForEmail } from "firebase/auth"
 import { auth } from "../lib/firebase";
 
@@ -70,7 +70,7 @@ export default function Login() {
         const loadingToast = toast.loading("Conectando com Google...", { id: "loading-toast" });
 
         try {
-            const user = await loginWithGoogle();
+            const user = await loginWithGoogle(password);
             toast.dismiss(loadingToast);
             toast.success(`Bem-vindo, ${user.displayName || user.email}!`, { id: "success-toast" });
             navigate("/");
@@ -81,22 +81,6 @@ export default function Login() {
             toast.error(msg, { id: "error-toast" });
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleResetPassword = async () => {
-        if (!email) {
-            toast.error("Digite seu email para resetar a senha.", { id: "error-toast" });
-            return;
-        }
-
-        try {
-            await resetPassword(email);
-            toast.success("Email de redefinição de senha enviado!", { id: "success-toast" });
-        } catch (err: any) {
-            const firebaseError = err as { code?: string; message?: string };
-            const msg = getFirebaseErrorMessage(firebaseError.code || "unknown");
-            toast.error(msg, { id: "error-toast" });
         }
     };
 
@@ -165,7 +149,7 @@ export default function Login() {
 
                 <p className="text-center text-sm text-gray-400 mt-2">
                     Esqueceu a senha?{" "}
-                    <button onClick={handleResetPassword} className="text-blue-400 hover:underline">
+                    <button onClick={() => navigate("/resetar-Senha")} className="text-blue-400 hover:underline">
                         Redefinir senha
                     </button>
                 </p>

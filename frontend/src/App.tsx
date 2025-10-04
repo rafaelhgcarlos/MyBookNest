@@ -10,6 +10,7 @@ import Profile from "./pages/Profile.tsx";
 import EditProfile from "./pages/EditProfile.tsx";
 import About from "./pages/About.tsx";
 import Footer from "./components/Home/Footer";
+import ResetPassword from "./pages/ResetPassword.tsx";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster, toast } from "react-hot-toast";
 
@@ -25,7 +26,7 @@ function ToastCleanup() {
 
 function Layout() {
     const location = useLocation();
-    const hideFooterRoutes = ["/registrar", "/entrar"];
+    const hideFooterRoutes = ["/registrar", "/entrar", "/resetar-senha"];
 
     return (
         <>
@@ -35,6 +36,7 @@ function Layout() {
                 <Route path="/biblioteca/:id" element={<BookDetails />} />
                 <Route path="/registrar" element={<Register />} />
                 <Route path="/entrar" element={<Login />} />
+                <Route path="/resetar-senha" element={<ResetPassword />} />
                 <Route path="/perfil" element={<Profile />} />
                 <Route path="/editar-perfil" element={<EditProfile />} />
                 <Route path="/sobre" element={<About />} />
