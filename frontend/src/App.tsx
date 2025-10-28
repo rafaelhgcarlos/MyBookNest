@@ -11,6 +11,7 @@ import EditProfile from "./pages/EditProfile.tsx";
 import About from "./pages/About.tsx";
 import Footer from "./components/Home/Footer";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import CreateCollection from "./pages/CreateCollection.tsx";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster, toast } from "react-hot-toast";
 
@@ -40,6 +41,7 @@ function Layout() {
                 <Route path="/perfil" element={<Profile />} />
                 <Route path="/editar-perfil" element={<EditProfile />} />
                 <Route path="/sobre" element={<About />} />
+                <Route path="/criar-colecao" element={<CreateCollection />} />
                 <Route path="*" element={<NotFound />} />
             </Routes>
 
