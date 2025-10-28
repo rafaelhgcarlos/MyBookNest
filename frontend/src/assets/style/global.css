@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+.flex::-webkit-scrollbar {
+    height: 8px;
+}
+
+.flex::-webkit-scrollbar-track {
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 9999px;
+}
+
+.flex::-webkit-scrollbar-thumb {
+    background-color: #3B82F6;
+    border-radius: 9999px;
+    transition: background-color 0.3s;
+}
+
+.flex::-webkit-scrollbar-thumb:hover {
+    background-color: #60A5FA;
+}
