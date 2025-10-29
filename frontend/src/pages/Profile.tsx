@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../lib/firebase";
-import { doc, getDoc, updateDoc, collection, getDocs, query, where, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, getDocs, query, where, deleteDoc, Timestamp } from "firebase/firestore";
 import { type User as FirebaseUser } from "firebase/auth";
 import Button from "../components/Button/Button";
 import Header from "../components/NavBar/Header";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { Trash2 } from "lucide-react";
+import { useMemo } from "react";
 
 interface Book {
     id: string;
@@ -31,6 +32,9 @@ interface Collection {
     title: string;
     description?: string;
     cover?: string;
+    medal?: string[];
+    createdAt?: Timestamp;
+    updatedAt?: Timestamp;
 }
 
 export default function MyProfile() {
@@ -38,17 +42,26 @@ export default function MyProfile() {
     const [user, setUser] = useState<User | null>(null);
     const [books, setBooks] = useState<Book[]>([]);
     const [loading, setLoading] = useState(true);
-    const [genres, setGenres] = useState<Record<string, number>>({});
     const [editingBio, setEditingBio] = useState(false);
     const [bioText, setBioText] = useState("");
     const [collections, setCollections] = useState<Collection[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [deleteModal, setDeleteModal] = useState<{
-        open: boolean;
-        type: "collection" | "book" | null;
-        id: string | null;
-        title: string | null;
-    }>({ open: false, type: null, id: null, title: null });
+    const [deleteModal, setDeleteModal] = useState({
+        open: false,
+        type: null as "collection" | "book" | null,
+        id: null as string | null,
+        title: null as string | null,
+    });
+    const [favoriteGenre, setFavoriteGenre] = useState("—");
+    const [lastRead, setLastRead] = useState("—");
+    const [sortFilter, setSortFilter] = useState<"medal" | "created" | "alpha">("created");
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const sortOptions = [
+        { label: "Ordem de Criação", value: "created", icon: "🕒" },
+        { label: "Alfabética (A-Z)", value: "alpha", icon: "🔤" },
+        { label: "Medalha", value: "medal", icon: "🥇" },
+    ];
+
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
@@ -58,6 +71,44 @@ export default function MyProfile() {
             }
 
             try {
+                const collectionsRef = collection(db, "collections");
+                const qCollections = query(collectionsRef, where("userId", "==", firebaseUser.uid));
+                const collectionsSnap = await getDocs(qCollections);
+
+                const userCollections: Collection[] = [];
+                const allBooks: Book[] = [];
+                const genreCount: Record<string, number> = {};
+
+                for (const colDoc of collectionsSnap.docs) {
+                    const colData = colDoc.data() as Collection;
+                    const collectionId = colDoc.id;
+                    userCollections.push({ ...colData, id: collectionId });
+
+                    const booksRef = collection(db, "collections", collectionId, "books");
+                    const booksSnap = await getDocs(booksRef);
+
+                    booksSnap.forEach((bookDoc) => {
+                        const bookData = bookDoc.data() as Book;
+                        allBooks.push({ ...bookData, id: bookDoc.id });
+
+                        if (bookData.genre) {
+                            genreCount[bookData.genre] = (genreCount[bookData.genre] || 0) + 1;
+                        }
+                    });
+                }
+
+                setCollections(userCollections);
+                setBooks(allBooks);
+
+                const mostReadGenre =
+                    Object.entries(genreCount)
+                        .sort(([, a], [, b]) => b - a)[0]?.[0] || "—";
+                setFavoriteGenre(mostReadGenre);
+
+                const lastReadBook = allBooks
+                    .filter((b) => b.readDate)
+                    .sort((a, b) => new Date(b.readDate!).getTime() - new Date(a.readDate!).getTime())[0];
+                setLastRead(lastReadBook ? lastReadBook.title : "—");
 
                 const userRef = doc(db, "users", firebaseUser.uid);
                 const userSnap = await getDoc(userRef);
@@ -85,34 +136,6 @@ export default function MyProfile() {
                         bio: "",
                     });
                 }
-
-                const booksRef = collection(db, "books");
-                const q = query(booksRef, where("userId", "==", firebaseUser.uid));
-                const booksSnap = await getDocs(q);
-
-                const userBooks: Book[] = [];
-                const genreCount: Record<string, number> = {};
-
-                booksSnap.forEach((doc) => {
-                    const data = doc.data() as Book;
-                    userBooks.push({ ...data, id: doc.id });
-                    if (data.genre) genreCount[data.genre] = (genreCount[data.genre] || 0) + 1;
-                });
-
-                const collectionsRef = collection(db, "collections");
-                const qCollections = query(collectionsRef, where("userId", "==", firebaseUser.uid));
-                const collectionsSnap = await getDocs(qCollections);
-
-                const userCollections: Collection[] = [];
-                collectionsSnap.forEach((doc) => {
-                    const data = doc.data() as Collection;
-                    userCollections.push({ ...data, id: doc.id });
-                });
-
-                setCollections(userCollections);
-
-                setBooks(userBooks);
-                setGenres(genreCount);
             } catch (err) {
                 console.error("Erro ao carregar perfil:", err);
             } finally {
@@ -139,22 +162,8 @@ export default function MyProfile() {
 
         const smoothScroll = () => {
             if (!el) return;
-
-            let nextScroll = el.scrollLeft + velocity;
-
-            if (nextScroll < -50) nextScroll = -50;
-            else if (nextScroll > el.scrollWidth - el.clientWidth + 50) {
-                nextScroll = el.scrollWidth - el.clientWidth + 50;
-            }
-
-            el.scrollLeft = nextScroll;
-
+            el.scrollLeft += velocity;
             velocity *= 0.85;
-
-            if (nextScroll < 0 || nextScroll > el.scrollWidth - el.clientWidth) {
-                velocity *= 0.5;
-            }
-
             if (Math.abs(velocity) > 0.5) {
                 animationFrame = requestAnimationFrame(smoothScroll);
             } else {
@@ -163,7 +172,6 @@ export default function MyProfile() {
         };
 
         el.addEventListener("wheel", handleWheel, { passive: false });
-
         return () => {
             el.removeEventListener("wheel", handleWheel);
             cancelAnimationFrame(animationFrame);
@@ -171,29 +179,40 @@ export default function MyProfile() {
     }, []);
 
     const openDeleteModal = (type: "collection" | "book", id: string, title: string) => {
-        setDeleteModal({ open: true, type, id, title});
+        setDeleteModal({ open: true, type, id, title });
     };
-
-    const closeDeleteModal = () => {
-        setDeleteModal({ open: false, type: null, id: null, title: null });
-    };
+    const closeDeleteModal = () => setDeleteModal({ open: false, type: null, id: null, title: null });
 
     const handleDelete = async () => {
         if (!deleteModal.id || !deleteModal.type) return;
 
         try {
             if (deleteModal.type === "collection") {
+                const booksRef = collection(db, "collections", deleteModal.id, "books");
+                const booksSnap = await getDocs(booksRef);
+                const batchPromises = booksSnap.docs.map((bookDoc) => deleteDoc(bookDoc.ref));
+                await Promise.all(batchPromises);
+
                 await deleteDoc(doc(db, "collections", deleteModal.id));
+
                 setCollections(prev => prev.filter(c => c.id !== deleteModal.id));
-            }
-            if (deleteModal.type === "book") {
-                await deleteDoc(doc(db, "books", deleteModal.id));
+                setBooks(prev => prev.filter(b => !booksSnap.docs.some(doc => doc.id === b.id)));
+
+                toast.success("Coleção deletada com sucesso!");
+            } else if (deleteModal.type === "book") {
+                const bookToDelete = books.find(b => b.id === deleteModal.id);
+                if (!bookToDelete) throw new Error("Livro não encontrado.");
+
+                const collectionId = (bookToDelete as any).collectionId;
+                await deleteDoc(doc(db, "collections", collectionId, "books", deleteModal.id));
+
                 setBooks(prev => prev.filter(b => b.id !== deleteModal.id));
+
+                toast.success("Livro deletado com sucesso!");
             }
-            toast.success(`${deleteModal.type === "collection" ? "Coleção" : "Livro"} deletado!`);
         } catch (err) {
-            console.error(err);
-            toast.error("Erro ao deletar.");
+            console.error("Erro ao deletar:", err);
+            toast.error("Erro ao deletar. Tente novamente.");
         } finally {
             closeDeleteModal();
         }
@@ -206,14 +225,52 @@ export default function MyProfile() {
             await updateDoc(userRef, { bio: bioText });
             setUser({ ...user, bio: bioText });
             setEditingBio(false);
-            toast.dismiss()
+            toast.dismiss();
             toast.success("Biografia atualizada com sucesso!");
         } catch (err) {
             console.error("Erro ao atualizar bio:", err);
-            toast.dismiss()
+            toast.dismiss();
             toast.error("Não foi possível atualizar a biografia. Tente novamente.");
         }
     };
+
+    const getMedalText = (medal: string | string[] | null | undefined) => {
+        if (!medal) return null;
+        const medalStr = Array.isArray(medal) ? medal[0] : medal;
+        if (medalStr.includes("Ouro")) return "Ouro";
+        if (medalStr.includes("Prata")) return "Prata";
+        if (medalStr.includes("Bronze")) return "Bronze";
+        return null;
+    };
+
+    const sortedCollections = useMemo(() => {
+        const cols = [...collections];
+        const medalOrder = ["Ouro", "Prata", "Bronze"];
+
+        if (sortFilter === "medal") {
+            cols.sort((a, b) => {
+                const aMedalText = getMedalText(a.medal);
+                const bMedalText = getMedalText(b.medal);
+
+                const aIndex = aMedalText ? medalOrder.indexOf(aMedalText) : medalOrder.length;
+                const bIndex = bMedalText ? medalOrder.indexOf(bMedalText) : medalOrder.length;
+
+                return aIndex - bIndex;
+            });
+        } else if (sortFilter === "alpha") {
+            cols.sort((a, b) => a.title.localeCompare(b.title));
+        } else if (sortFilter === "created") {
+            cols.sort((a, b) => {
+                const aTime = a.createdAt ? a.createdAt.toMillis() : 0;
+                const bTime = b.createdAt ? b.createdAt.toMillis() : 0;
+                return bTime - aTime;
+            });
+        }
+
+        return cols;
+    }, [collections, sortFilter]);
+
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 pt-16">
@@ -276,7 +333,7 @@ export default function MyProfile() {
                                     onClick={() => setEditingBio(true)}
                                 >
                                     <p className="text-gray-300 text-left break-all">
-                                        {user?.bio || "Clique aqui para adicionar uma biografia."}
+                                        {user?.bio || "Clique para adicionar uma biografia."}
                                     </p>
                                 </motion.div>
                             )}
@@ -293,91 +350,89 @@ export default function MyProfile() {
                 </motion.div>
 
                 {!loading && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.6 }}
-                        className="grid grid-cols-1 sm:grid-cols-3 gap-6"
-                    >
-                        <div className="bg-black/50 backdrop-blur-md rounded-2xl p-4 text-center shadow-lg hover:scale-105 transform transition-transform">
-                            <p className="text-gray-400">Livros adicionados</p>
-                            <h2 className="text-2xl font-bold text-white">{books.length}</h2>
-                        </div>
-                        <div className="bg-black/50 backdrop-blur-md rounded-2xl p-4 text-center shadow-lg hover:scale-105 transform transition-transform">
-                            <p className="text-gray-400">Gênero favorito</p>
-                            <h2 className="text-2xl font-bold text-white">
-                                {Object.keys(genres).length > 0
-                                    ? Object.entries(genres).sort((a, b) => b[1] - a[1])[0][0]
-                                    : "—"}
-                            </h2>
-                        </div>
-                        <div className="bg-black/50 backdrop-blur-md rounded-2xl p-4 text-center shadow-lg hover:scale-105 transform transition-transform">
-                            <p className="text-gray-400">Última leitura</p>
-                            <h2 className="text-2xl font-bold text-white">
-                                {books.length > 0
-                                    ? books
-                                    .filter((b) => b.readDate)
-                                    .sort((a, b) => (b.readDate! > a.readDate! ? 1 : -1))[0]?.title || "—"
-                                    : "—"}
-                            </h2>
-                        </div>
-                    </motion.div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        {[
+                            { label: "Livros", value: books.length, icon: "📚" },
+                            { label: "Gênero favorito", value: favoriteGenre, icon: "🎭" },
+                            { label: "Última leitura", value: lastRead, icon: "🕯️" },
+                        ].map(({ label, value, icon }) => (
+                            <motion.div
+                                key={label}
+                                whileHover={{ scale: 1.05 }}
+                                className="bg-gray-800/70 backdrop-blur-md rounded-2xl p-5 flex flex-col items-center text-center shadow-lg"
+                            >
+                                <span className="text-3xl mb-2">{icon}</span>
+                                <p className="text-gray-400 text-sm">{label}</p>
+                                <motion.h2
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.4 }}
+                                    className="text-2xl font-bold text-white"
+                                >
+                                    {value}
+                                </motion.h2>
+                            </motion.div>
+                        ))}
+                    </div>
                 )}
 
-                <div className="flex flex-col gap-4">
-                    <h2 className="text-2xl font-semibold text-white">Meus Livros</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {loading
-                            ? Array.from({ length: 6 }).map((_, i) => (
-                                <div
-                                    key={i}
-                                    className="flex flex-col items-center gap-2 bg-gray-700/50 rounded-2xl p-4 animate-pulse"
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full">
+                    <h2 className="text-2xl font-semibold text-white break-words">
+                        Minhas Coleções
+                    </h2>
+
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center">
+                        {collections.length > 0 && (
+                            <Button
+                                label="+ Nova Coleção"
+                                style="primary"
+                                onClick={() => navigate("/criar-colecao")}
+                            />
+                        )}
+
+                        {collections.length > 0 && (
+                            <div className="relative">
+                                <motion.button
+                                    onClick={() => setDropdownOpen(prev => !prev)}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="flex justify-between items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg border border-blue-500/30 hover:border-blue-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
-                                    <div className="w-32 h-44 bg-gray-600 rounded-lg mb-2"></div>
-                                    <div className="h-4 w-24 bg-gray-600 rounded"></div>
-                                    <div className="h-3 w-16 bg-gray-600 rounded"></div>
-                                </div>
-                            ))
-                            : books.length === 0
-                                ? <p className="text-gray-300">Você ainda não adicionou nenhum livro.</p>
-                                : books.map((book) => (
-                                    <motion.div
-                                        key={book.id}
-                                        whileHover={{ scale: 1.05 }}
-                                        className="flex flex-col items-center gap-2 bg-gray-800/60 p-4 rounded-2xl shadow-lg"
+          <span className="flex items-center gap-2">
+            {sortOptions.find(o => o.value === sortFilter)?.icon}{" "}
+              {sortOptions.find(o => o.value === sortFilter)?.label}
+          </span>
+                                    <span className="ml-2">▾</span>
+                                </motion.button>
+
+                                {dropdownOpen && (
+                                    <motion.ul
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="absolute mt-2 w-56 bg-gray-900 rounded-lg shadow-lg overflow-hidden z-50 border border-blue-500/30"
                                     >
-                                        <div className="relative w-32 h-44">
-                                            <img
-                                                src={book.cover || "/default-book.png"}
-                                                alt={book.title}
-                                                className="w-full h-full object-cover rounded-lg"
-                                            />
-                                            {book.rating && (
-                                                <div className="absolute top-2 right-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded-md shadow-lg">
-                                                    ⭐ {book.rating}/5
-                                                </div>
-                                            )}
-                                        </div>
-                                        <h3 className="text-white font-medium text-center">{book.title}</h3>
-                                        <p className="text-gray-300 text-sm text-center">{book.author}</p>
-                                        {book.genre && <p className="text-gray-400 text-xs">{book.genre}</p>}
-                                        {book.readDate && (
-                                            <p className="text-gray-500 text-xs">Lido em: {book.readDate}</p>
-                                        )}
-                                        <Button
-                                            label="Ver detalhes"
-                                            style="ghost"
-                                            onClick={() => navigate(`/livro/${book.id}`)}
-                                        />
-                                    </motion.div>
-                                ))}
+                                        {sortOptions.map(option => (
+                                            <motion.li
+                                                key={option.value}
+                                                whileHover={{ backgroundColor: "rgba(59, 130, 246, 0.2)" }}
+                                                onClick={() => {
+                                                    setSortFilter(option.value as any);
+                                                    setDropdownOpen(false);
+                                                }}
+                                                className="cursor-pointer px-4 py-2 flex items-center gap-2 text-white transition"
+                                            >
+                                                {option.icon} {option.label}
+                                            </motion.li>
+                                        ))}
+                                    </motion.ul>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-4">
-                    <h2 className="text-2xl font-semibold text-white">Minhas Coleções</h2>
 
-                    <div className="relative">
+                <div className="relative">
                         <div
                             ref={scrollRef}
                             className="flex gap-6 overflow-x-auto scroll-smooth py-4 px-2"
@@ -386,6 +441,20 @@ export default function MyProfile() {
                                 scrollbarColor: "#3B82F6 #1E293B",
                             }}
                         >
+
+                            {!loading &&  collections.length == 0 && (
+                                <motion.div
+                                    whileHover={{ scale: 1.05 }}
+                                    onClick={() => navigate("/criar-colecao")}
+                                    className="flex-shrink-0 w-64 flex flex-col items-center justify-center gap-3 bg-gray-800/60 p-6 rounded-2xl shadow-lg cursor-pointer border-2 border-dashed border-blue-400 hover:border-blue-500 transition-colors"
+                                >
+                                    <div className="w-20 h-20 flex items-center justify-center rounded-full bg-blue-400/20 text-blue-400 text-4xl font-bold">
+                                        +
+                                    </div>
+                                    <p className="text-white font-medium text-center">Criar Nova Coleção</p>
+                                </motion.div>
+                            )}
+
                             {loading
                                 ? (
                                     <div className="flex-shrink-0 w-64 h-64 bg-gray-700/50 rounded-2xl p-4 animate-pulse flex flex-col items-center gap-3">
@@ -395,7 +464,7 @@ export default function MyProfile() {
                                     </div>
                                 )
                                 : collections.length > 0
-                                    ? collections.map((col) => (
+                                    ? sortedCollections.map((col) => (
                                         <motion.div
                                             key={col.id}
                                             whileHover={{ scale: 1.05 }}
@@ -412,11 +481,26 @@ export default function MyProfile() {
                                                 <Trash2 className="w-5 h-5" />
                                             </button>
 
-                                            <div className="relative w-full h-40 rounded-lg overflow-hidden mb-3">
+                                            <div className="relative">
+                                                {col.medal && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: -10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        className={`absolute -top-3 -left-3 px-2 py-1 rounded-full text-xs font-bold text-black shadow-md ${
+                                                            col.medal.includes("Ouro")
+                                                                ? "bg-yellow-400"
+                                                                : col.medal.includes("Prata")
+                                                                    ? "bg-gray-300"
+                                                                    : "bg-amber-700"
+                                                        }`}
+                                                    >
+                                                        {col.medal}
+                                                    </motion.div>
+                                                )}
                                                 <img
                                                     src={col.cover || "/default-collection.png"}
                                                     alt={col.title}
-                                                    className="w-full h-full object-cover"
+                                                    className="w-full h-48 object-cover rounded-xl"
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                                             </div>
@@ -429,22 +513,8 @@ export default function MyProfile() {
                                         </motion.div>
                                     ))
                                     : ('')}
-
-                            {!loading && (
-                                <motion.div
-                                    whileHover={{ scale: 1.05 }}
-                                    onClick={() => navigate("/criar-colecao")}
-                                    className="flex-shrink-0 w-64 flex flex-col items-center justify-center gap-3 bg-gray-800/60 p-6 rounded-2xl shadow-lg cursor-pointer border-2 border-dashed border-blue-400 hover:border-blue-500 transition-colors"
-                                >
-                                    <div className="w-20 h-20 flex items-center justify-center rounded-full bg-blue-400/20 text-blue-400 text-4xl font-bold">
-                                        +
-                                    </div>
-                                    <p className="text-white font-medium text-center">Criar Nova Coleção</p>
-                                </motion.div>
-                            )}
                         </div>
                     </div>
-                </div>
             </div>
 
             {deleteModal.open && (
@@ -477,7 +547,6 @@ export default function MyProfile() {
                     </motion.div>
                 </div>
             )}
-
         </div>
     );
 }

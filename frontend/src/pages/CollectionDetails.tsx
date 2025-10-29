@@ -9,7 +9,7 @@ import {
     deleteDoc,
     updateDoc,
     Timestamp,
-    addDoc,
+    setDoc,
 } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "../components/NavBar/Header";
@@ -49,7 +49,6 @@ export default function CollectionDetails() {
     const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
     const [filter, setFilter] = useState<"all" | "read" | "unread" | "author">("all");
 
-    // --- Carregar coleção e livros ---
     const loadCollection = async () => {
         if (!id) return;
         setLoading(true);
@@ -79,10 +78,12 @@ export default function CollectionDetails() {
     };
 
     useEffect(() => {
-        loadCollection().then(() => {
-            saveCollectionStats();
-        });
+        loadCollection();
     }, [id]);
+
+    useEffect(() => {
+        if (!loading && collectionData) saveCollectionStats();
+    }, [loading, collectionData, books]);
 
     const totalBooks = books.length;
     const totalRead = books.filter(b => b.read).length;
@@ -107,11 +108,10 @@ export default function CollectionDetails() {
     );
 
     let medal: string | null = null;
-    if (totalBooks > 0) {
-        if (readPercent <= 33) medal = "🥉 Bronze";
-        else if (readPercent <= 66) medal = "🥈 Prata";
-        else medal = "🥇 Ouro";
-    }
+    if (totalRead === 0) medal = null;
+    else if (readPercent <= 33) medal = "🥉 Bronze";
+    else if (readPercent <= 99) medal = "🥈 Prata";
+    else medal = "🥇 Ouro";
 
     const badges = [
         { name: "Iniciante", emoji: "📘", achieved: totalRead >= 1 },
@@ -132,7 +132,8 @@ export default function CollectionDetails() {
     const saveCollectionStats = async () => {
         if (!collectionData) return;
 
-        const statsRef = collection(db, "collectionsStats");
+        const statsRef = doc(db, "collectionsStats", collectionData.id);
+        const colRef = doc(db, "collections", collectionData.id);
 
         const statsData = {
             collectionId: collectionData.id,
@@ -149,7 +150,8 @@ export default function CollectionDetails() {
         };
 
         try {
-            await addDoc(statsRef, statsData);
+            await setDoc(statsRef, statsData, { merge: true });
+            await updateDoc(colRef, { medal });
             console.log("Estatísticas salvas:", statsData);
         } catch (err) {
             console.error("Erro ao salvar estatísticas:", err);
@@ -195,7 +197,9 @@ export default function CollectionDetails() {
         if (filter === "read") filtered = filtered.filter(b => b.read === true);
         else if (filter === "unread") filtered = filtered.filter(b => b.read !== true);
 
-        if (filter === "author") filtered.sort((a, b) => (a.author || "").localeCompare(b.author || ""));
+        if (filter === "author") {
+            filtered = filtered.sort((a, b) => (a.author || "").localeCompare(b.author || ""));
+        }
 
         return filtered;
     }, [books, filter]);
@@ -304,7 +308,7 @@ export default function CollectionDetails() {
                                     <div>Total de livros: <strong className="text-white">{totalBooks}</strong></div>
                                     <div>Total lidos: <strong className="text-white">{totalRead}</strong></div>
                                     <div>Progresso: <strong className="text-white">{readPercent}%</strong></div>
-                                    <div>Medalha: <strong className="text-yellow-400">{readPercent >= 66 ? "Ouro" : readPercent >= 33 ? "Prata" : "Bronze"}</strong></div>
+                                    <div>Medalha: <strong className="text-yellow-400">{medal || "Nenhuma"}</strong></div>
                                     <div>Nível: <strong className="text-white">{level}</strong></div>
                                 </>
                             )}

@@ -12,6 +12,7 @@ import { auth } from "../lib/firebase";
 interface Book {
     id: string;
     volumeInfo: {
+        categories?: string[];
         title: string;
         authors?: string[];
         description?: string;
@@ -122,6 +123,8 @@ export default function BookDetails() {
                 author: book.volumeInfo.authors?.join(", ") || "Autor desconhecido",
                 cover: coverSrc || "",
                 createdAt: new Date(),
+                genre: book.volumeInfo.categories?.[0] || "Desconhecido",
+                readDate: new Date().toISOString(),
             });
             toast.success("Livro adicionado à coleção!");
             setModalOpen(false);
@@ -178,8 +181,17 @@ export default function BookDetails() {
                                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-blue-100 break-words">
                                     {book.volumeInfo.title}
                                 </h1>
-                                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-blue-300">
-                                    <span className="italic">{book.volumeInfo.authors?.join(", ") || "Autor desconhecido"}</span>
+                                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                                    <span className="italic text-blue-300">
+        {book.volumeInfo.authors?.join(", ") || "Autor desconhecido"}
+    </span>
+
+                                    {book.volumeInfo.categories && (
+                                        <span className="px-3 py-1 bg-blue-700/70 text-blue-100 rounded-full text-xs font-semibold uppercase">
+            {book.volumeInfo.categories[0]}
+        </span>
+                                    )}
+
                                     <Stars value={book.volumeInfo.averageRating || 4} />
                                 </div>
                                 <p className={`mt-4 text-blue-100/90 leading-relaxed ${expanded ? "" : "line-clamp-5"}`}>
