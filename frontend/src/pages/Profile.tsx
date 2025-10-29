@@ -359,7 +359,7 @@ export default function MyProfile() {
                             <motion.div
                                 key={label}
                                 whileHover={{ scale: 1.05 }}
-                                className="bg-gray-800/70 backdrop-blur-md rounded-2xl p-5 flex flex-col items-center text-center shadow-lg"
+                                className="bg-gray-800/70 backdrop-blur-md rounded-2xl p-5 flex flex-col justify-center items-center text-center shadow-lg"
                             >
                                 <span className="text-3xl mb-2">{icon}</span>
                                 <p className="text-gray-400 text-sm">{label}</p>
