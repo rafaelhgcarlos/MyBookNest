@@ -4,7 +4,7 @@ import {motion} from "framer-motion";
 import Header from "../components/NavBar/Header";
 import Button from "../components/Button/Button";
 import {db, auth} from "../lib/firebase";
-import {collection, addDoc, serverTimestamp} from "firebase/firestore";
+import {collection, addDoc} from "firebase/firestore";
 import toast from "react-hot-toast";
 
 export default function CreateCollection() {
@@ -73,8 +73,8 @@ export default function CreateCollection() {
                 title: title.trim(),
                 description: description.trim(),
                 cover: cover || defaultCover,
-                userId: user.uid,
-                createdAt: serverTimestamp(),
+                userId: auth.currentUser?.uid,
+                createdAt: new Date(),
             });
 
             toast.success("Coleção criada com sucesso!");

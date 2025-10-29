@@ -5,8 +5,9 @@ import Header from "../components/NavBar/Header";
 import Button from "../components/Button/Button";
 import { FiArrowLeft, FiX } from "react-icons/fi";
 import { db } from "../lib/firebase";
-import { collection, getDocs, addDoc } from "firebase/firestore";
+import { collection, getDocs, addDoc, query, where } from "firebase/firestore";
 import toast from "react-hot-toast";
+import { auth } from "../lib/firebase";
 
 interface Book {
     id: string;
@@ -35,7 +36,7 @@ export default function BookDetails() {
 
     const [collections, setCollections] = useState<Collection[]>([]);
     const [collectionsLoading, setCollectionsLoading] = useState(true);
-    const [modalOpen, setModalOpen] = useState(false);
+    const [modalOpen, setModalOpen] = useState<"select" | "login" | "create" | false>(false);
     const [addingToCollection, setAddingToCollection] = useState(false);
 
     useEffect(() => {
@@ -64,7 +65,17 @@ export default function BookDetails() {
         const fetchCollections = async () => {
             setCollectionsLoading(true);
             try {
-                const colSnap = await getDocs(collection(db, "collections"));
+                const currentUser = auth.currentUser;
+                if (!currentUser) {
+                    setCollections([]);
+                    return;
+                }
+                const q = query(
+                    collection(db, "collections"),
+                    where("userId", "==", currentUser.uid)
+                );
+
+                const colSnap = await getDocs(q);
                 const cols: Collection[] = await Promise.all(
                     colSnap.docs.map(async (doc) => {
                         const booksSnap = await getDocs(collection(db, "collections", doc.id, "books"));
@@ -184,7 +195,21 @@ export default function BookDetails() {
                                 )}
 
                                 <div className="mt-6">
-                                    <Button label="Adicionar à Coleção" style="primary" onClick={() => setModalOpen(true)} />
+                                    <Button
+                                        label="Adicionar à Coleção"
+                                        style="primary"
+                                        onClick={() => {
+                                            const currentUser = auth.currentUser;
+                                            if (!currentUser) {
+                                                toast.error("Você precisa estar logado para adicionar livros a uma coleção.");
+                                                setModalOpen("login");
+                                            } else if (collections.length === 0) {
+                                                setModalOpen("create");
+                                            } else {
+                                                setModalOpen("select");
+                                            }
+                                        }}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -213,49 +238,54 @@ export default function BookDetails() {
                                 <FiX />
                             </button>
 
-                            <h2 className="text-xl sm:text-2xl font-bold text-white mb-6 text-center sm:text-left">
-                                Escolha uma Coleção
-                            </h2>
+                            {modalOpen === "login" && (
+                                <div className="flex flex-col items-center gap-4">
+                                    <h2 className="text-xl font-bold text-white text-center">Você precisa estar logado</h2>
+                                    <Link to="/entrar">
+                                        <Button label="Ir para Login" style="primary" />
+                                    </Link>
+                                </div>
+                            )}
 
-                            <div className="overflow-y-auto overflow-x-hidden max-h-[80vh] scroll-smooth custom-scroll grid grid-cols-1 sm:grid-cols-2 gap-6 md:p-4">
-                                {collectionsLoading
-                                    ? [...Array(4)].map((_, i) => (
-                                        <div
-                                            key={i}
-                                            className="bg-blue-800/50 rounded-2xl animate-pulse h-44 flex flex-col items-center"
-                                        >
-                                            <div className="w-full h-32 bg-blue-700/70 rounded-t-2xl mb-3" />
-                                            <div className="p-3 w-full">
-                                                <div className="h-4 bg-blue-700/70 rounded mb-1" />
-                                                <div className="h-3 bg-blue-700/70 rounded w-1/2" />
+                            {modalOpen === "create" && (
+                                <div className="flex flex-col items-center gap-4">
+                                    <h2 className="text-xl font-bold text-white text-center">Nenhuma coleção encontrada</h2>
+                                    <Link to="/criar-colecao">
+                                        <Button label="Criar Coleção" style="primary" />
+                                    </Link>
+                                </div>
+                            )}
+
+                            {modalOpen === "select" && (
+                                <div className="overflow-y-auto overflow-x-hidden max-h-[80vh] scroll-smooth custom-scroll grid grid-cols-1 sm:grid-cols-2 gap-6 md:p-4">
+                                    {collectionsLoading
+                                        ? [...Array(4)].map((_, i) => (
+                                            <div key={i} className="bg-blue-800/50 rounded-2xl animate-pulse h-44 flex flex-col items-center">
+                                                <div className="w-full h-32 bg-blue-700/70 rounded-t-2xl mb-3" />
+                                                <div className="p-3 w-full">
+                                                    <div className="h-4 bg-blue-700/70 rounded mb-1" />
+                                                    <div className="h-3 bg-blue-700/70 rounded w-1/2" />
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))
-                                    : collections.length === 0 ? (
-                                        <p className="col-span-full text-blue-300 text-center">Nenhuma coleção disponível.</p>
-                                    ) : (
-                                        collections.map((col) => (
+                                        ))
+                                        : collections.map((col) => (
                                             <motion.div
                                                 key={col.id}
                                                 whileHover={{ scale: 1.04, y: -2, boxShadow: "0 4px 10px rgba(0,255,255,0.25)" }}
                                                 transition={{ type: "spring", stiffness: 200, damping: 15 }}
                                                 className={`bg-blue-800/50 rounded-2xl cursor-pointer overflow-hidden border border-blue-700 flex flex-col items-center transition-transform duration-200 will-change-transform
-                        ${addingToCollection ? "opacity-50 pointer-events-none" : ""}`}
+                                    ${addingToCollection ? "opacity-50 pointer-events-none" : ""}`}
                                                 onClick={() => addToCollection(col.id)}
                                             >
-                                                <img
-                                                    src={col.cover}
-                                                    alt={col.title}
-                                                    className="w-full h-36 sm:h-40 object-cover rounded-t-2xl"
-                                                />
+                                                <img src={col.cover} alt={col.title} className="w-full h-36 sm:h-40 object-cover rounded-t-2xl" />
                                                 <div className="p-3 text-center">
                                                     <h3 className="text-white font-semibold text-sm sm:text-base break-words">{col.title}</h3>
                                                     <p className="text-blue-300 text-xs sm:text-sm">{col.booksCount} livro(s)</p>
                                                 </div>
                                             </motion.div>
-                                        ))
-                                    )}
-                            </div>
+                                        ))}
+                                </div>
+                            )}
                         </motion.div>
                     </motion.div>
                 )}
