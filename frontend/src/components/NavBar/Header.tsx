@@ -47,8 +47,7 @@ export default function Header() {
             await signOut(auth);
             setUser(null);
             setUserMenuOpen(false);
-        } catch {
-        }
+        } catch { /* empty */ }
     }
 
     useEffect(() => {
@@ -78,6 +77,37 @@ export default function Header() {
             unsubscribe();
         };
     }, []);
+
+    if (!user) {
+        return (
+            <header className="fixed top-0 w-full z-50 backdrop-blur-md bg-slate-900/80 shadow-lg shadow-black/30">
+                <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between py-4 gap-8">
+                        <div className="h-8 w-40 bg-gray-700 rounded animate-pulse" />
+
+                        <div className="md:hidden h-10 w-10 bg-gray-700 rounded-full animate-pulse" />
+
+                        <nav className="hidden md:flex gap-6">
+                            <div className="h-6 w-24 bg-gray-700 rounded animate-pulse" />
+                            <div className="h-6 w-24 bg-gray-700 rounded animate-pulse" />
+                            <div className="h-6 w-24 bg-gray-700 rounded animate-pulse" />
+                        </nav>
+
+                        <div className="hidden md:flex items-center gap-4">
+                            <div className="h-8 w-32 bg-gray-700 rounded animate-pulse" />
+                            <div className="h-8 w-20 bg-gray-600 rounded animate-pulse" />
+                        </div>
+                    </div>
+
+                    <div className="md:hidden mt-2 space-y-2">
+                        <div className="h-6 w-full bg-gray-700 rounded animate-pulse" />
+                        <div className="h-6 w-full bg-gray-700 rounded animate-pulse" />
+                        <div className="h-6 w-full bg-gray-700 rounded animate-pulse" />
+                    </div>
+                </div>
+            </header>
+        );
+    }
 
     return (
         <header

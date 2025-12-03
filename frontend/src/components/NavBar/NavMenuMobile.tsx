@@ -40,6 +40,7 @@ function NavMenuMobile({
                         { label: "Inicio", href: "/", icon: "uil-home" },
                         { label: "Biblioteca", href: "/biblioteca", icon: "uil-book" },
                         { label: "Sobre", href: "/sobre", icon: "uil-question-circle" },
+                        { label: "Coleções", href: "/colecoes", icon: "uil-question-circle" },
                     ]}
                 />
             </ul>
