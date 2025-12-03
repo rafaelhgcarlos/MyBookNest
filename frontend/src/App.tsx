@@ -15,6 +15,7 @@ import CreateCollection from "./pages/CreateCollection.tsx";
 import CollectionDetails from "./pages/CollectionDetails.tsx";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster, toast } from "react-hot-toast";
+import CollectionsList from "./pages/CollectionList.tsx";
 
 function ToastCleanup() {
     const location = useLocation();
@@ -45,6 +46,7 @@ function Layout() {
                 <Route path="/criar-colecao" element={<CreateCollection />} />
                 <Route path="/colecao/:id" element={<CollectionDetails />} />
                 <Route path="*" element={<NotFound />} />
+                <Route path="/colecoes" element={<CollectionsList />} />
             </Routes>
 
             {!hideFooterRoutes.includes(location.pathname) && <Footer />}
