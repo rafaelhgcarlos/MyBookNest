@@ -115,9 +115,21 @@ export default function BookDetails() {
 
     const addToCollection = async (collectionId: string) => {
         if (!book) return;
+
         try {
             setAddingToCollection(true);
+
             const booksRef = collection(db, "collections", collectionId, "books");
+
+            const q = query(booksRef, where("title", "==", book.volumeInfo.title));
+            const existsSnap = await getDocs(q);
+
+            if (!existsSnap.empty) {
+                toast.error("Este livro já está nesta coleção!");
+                setAddingToCollection(false);
+                return;
+            }
+
             await addDoc(booksRef, {
                 title: book.volumeInfo.title,
                 author: book.volumeInfo.authors?.join(", ") || "Autor desconhecido",
@@ -126,6 +138,7 @@ export default function BookDetails() {
                 genre: book.volumeInfo.categories?.[0] || "Desconhecido",
                 readDate: new Date().toISOString(),
             });
+
             toast.success("Livro adicionado à coleção!");
             setModalOpen(false);
         } catch (err) {
