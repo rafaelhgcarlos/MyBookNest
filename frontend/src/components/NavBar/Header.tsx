@@ -24,6 +24,8 @@ export default function Header() {
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
 
+    const [isLoading, setIsLoading] = useState(true); // 👈 AQUI
+
     function toggleMenu() {
         setIsMenuOpen((prev) => !prev);
     }
@@ -64,11 +66,18 @@ export default function Header() {
                     const displayName = [data.name, data.lastName].filter(Boolean).join(" ");
                     setUser({ displayName });
                 } else {
-                    setUser({ displayName: firebaseUser.displayName || firebaseUser.email || "Usuário" });
+                    setUser({
+                        displayName:
+                            firebaseUser.displayName ||
+                            firebaseUser.email ||
+                            "Usuário",
+                    });
                 }
             } else {
                 setUser(null);
             }
+
+            setIsLoading(false);
         });
 
         return () => {
@@ -78,7 +87,8 @@ export default function Header() {
         };
     }, []);
 
-    if (!user) {
+    // 🔥 SE ESTÁ CARREGANDO → MOSTRA SKELETON
+    if (isLoading) {
         return (
             <header className="fixed top-0 w-full z-50 backdrop-blur-md bg-slate-900/80 shadow-lg shadow-black/30">
                 <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
